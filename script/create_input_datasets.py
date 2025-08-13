@@ -1,25 +1,38 @@
 """create_input_datasets.py — نسخهٔ «تقسیم رندوم + مرتب‌سازی درون‌گروه»
 
-این اسکریپت فایل `meteo_asadabad.csv` را می‌خواند، رندوم ولی پایدار (random_state=42)
-به نسبت 80 ٪ / 10 ٪ / 10 ٪ تقسیم می‌کند، سپس **در هر زیرمجموعه** سطرها را مجدّداً
-بر اساس ستون `date` صعودی مرتب می‌کند تا توالی زمانی حفظ شود. خروجی‌ها دقیقاً با
-نام و ساختار مورد انتظار HL‑VAE ذخیره می‌شود.
+این اسکریپت یک فایل ورودی (CSV یا Excel) را که با پارامتر `-input` مشخص شده می‌خواند،
+رندوم ولی پایدار (random_state=42) به نسبت 80 ٪ / 10 ٪ / 10 ٪ تقسیم می‌کند، سپس
+**در هر زیرمجموعه** سطرها را مجدّداً بر اساس ستون `date` صعودی مرتب می‌کند تا توالی
+زمانی حفظ شود. خروجی‌ها دقیقاً با نام و ساختار مورد انتظار HL‑VAE ذخیره می‌شود.
 """
 from __future__ import annotations
 
 from pathlib import Path
+import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # -----------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-RAW       = SCRIPT_DIR / "meteo_asadabad.csv"      # فایل خام
+parser = argparse.ArgumentParser(description="Split dataset into train/validation/test")
+parser.add_argument(
+    "-input",
+    dest="input_path",
+    default=str(SCRIPT_DIR / "meteo_asadabad.csv"),
+    help="Path to input dataset (CSV or Excel)"
+)
+args = parser.parse_args()
+
+RAW = Path(args.input_path).expanduser().resolve()      # فایل خام
 OUT_DIR   = SCRIPT_DIR.parent / "data"
 OUT_DIR.mkdir(exist_ok=True)
 
 # 1) بارگذاری و تعریف ستون‌ها ---------------------------------------------------
-df = pd.read_csv(RAW)
+if RAW.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
+    df = pd.read_excel(RAW)
+else:
+    df = pd.read_csv(RAW)
 fixed_cols = ["station_id", "date"]               # X
 Y_cols      = [c for c in df.columns if c not in fixed_cols]  # Y
 
@@ -69,19 +82,13 @@ for name, idx in [("training", train_idx),
     save_split(idx, name)
 
 # 5) data_types.csv --------------------------------------------------------------
-types = [
-    "pos", # ff_max
-    "pos",   # ffm
-    "real",  # tmax
-    "real",  # tmin
-    "real",  # tm
-    "pos", # umax
-    "pos", # umin
-    "real",  # td_m
-    "pos",   # ewsm
-    "pos"    # rrr24
-]
-assert len(types) == len(Y_cols), "Length of types list must match Y columns"
+# به طور پیش‌فرض تمام ستون‌های Y به عنوان "real" در نظر گرفته می‌شوند مگر اینکه
+# نام ستون بیانگر مقادیر صرفاً مثبت باشد (مانند rrr24).
+types = ["real"] * len(Y_cols)
+for i, col in enumerate(Y_cols):
+    if col.lower() == "rrr24":
+        types[i] = "pos"
+
 types_df = pd.DataFrame({
     'type': types,
     'dim': [1] * len(types),
