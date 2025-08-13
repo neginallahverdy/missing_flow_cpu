@@ -1,0 +1,137 @@
+Iter 180/200 - Time: 6.233  - Loss: 26236.988  - GP loss: 6655.178  - NLL Loss: 19581.810  - Recon Loss: 230.435
+Error for Training: 0.02827429420690799
+Testing the model with a validation set
+Validation set - Loss: 3282.811  - GP loss: 830.984  - NLL loss: 2451.827  - Recon Loss: 1.249
+Validation set - GP prediction Error: 1.5681, Mean of Error 0.1568
+Validation Duration: 24.89231562614441
+Length of test dataset:  815
+Error for whole test dataset. Even the ones in the training dataset.
+
+pos
+Imputation
+Error:0.003804921301038671
+Prediction-Mean
+Error:0.0022775731755602453
+Prediction-Mode
+Error:0.0009104566277158983
+
+real
+Imputation
+Error:0.0
+Prediction-Mean
+Error:0.0
+Prediction-Mode
+Error:0.0
+Iter 181/200 - Time: 6.293  - Loss: 26139.818  - GP loss: 6644.449  - NLL Loss: 19495.369  - Recon Loss: 223.095
+Error for Training: 0.027373664215687363
+Iter 182/200 - Time: 6.525  - Loss: 26220.989  - GP loss: 6627.876  - NLL Loss: 19593.113  - Recon Loss: 236.733
+Error for Training: 0.02904694145899615
+Iter 183/200 - Time: 7.092  - Loss: 26237.016  - GP loss: 6613.280  - NLL Loss: 19623.735  - Recon Loss: 232.056
+Error for Training: 0.0284731704925611
+Iter 184/200 - Time: 6.985  - Loss: 26093.564  - GP loss: 6609.756  - NLL Loss: 19483.808  - Recon Loss: 222.850
+Error for Training: 0.027343604373244994
+Iter 185/200 - Time: 7.153  - Loss: 26116.862  - GP loss: 6605.814  - NLL Loss: 19511.048  - Recon Loss: 226.604
+Error for Training: 0.027804166498601568
+Testing the model with a validation set
+Validation set - Loss: 3285.001  - GP loss: 829.457  - NLL loss: 2455.544  - Recon Loss: 1.268
+Validation set - GP prediction Error: 1.5592, Mean of Error 0.1559
+Validation Duration: 26.189476251602173
+Iter 186/200 - Time: 6.958  - Loss: 26122.058  - GP loss: 6600.973  - NLL Loss: 19521.085  - Recon Loss: 230.802
+Error for Training: 0.02831924819081356
+Iter 187/200 - Time: 8.169  - Loss: 26156.043  - GP loss: 6597.485  - NLL Loss: 19558.558  - Recon Loss: 225.389
+Error for Training: 0.027655100175875677
+Iter 188/200 - Time: 7.053  - Loss: 26169.286  - GP loss: 6593.830  - NLL Loss: 19575.456  - Recon Loss: 230.432
+Error for Training: 0.0282739243370707
+Iter 189/200 - Time: 7.664  - Loss: 26088.561  - GP loss: 6590.810  - NLL Loss: 19497.751  - Recon Loss: 232.955
+Error for Training: 0.028583448716248603
+Iter 190/200 - Time: 7.163  - Loss: 26110.125  - GP loss: 6586.404  - NLL Loss: 19523.721  - Recon Loss: 222.185
+Error for Training: 0.027261924817057335
+Testing the model with a validation set
+Validation set - Loss: 3273.871  - GP loss: 830.447  - NLL loss: 2443.424  - Recon Loss: 1.214
+Validation set - GP prediction Error: 1.5675, Mean of Error 0.1567
+Validation Duration: 27.74462080001831
+Iter 191/200 - Time: 6.793  - Loss: 26046.942  - GP loss: 6581.162  - NLL Loss: 19465.781  - Recon Loss: 222.857
+Error for Training: 0.027344422622181928
+Iter 192/200 - Time: 7.369  - Loss: 26015.728  - GP loss: 6572.538  - NLL Loss: 19443.190  - Recon Loss: 217.567
+Error for Training: 0.02669539836029083
+Iter 193/200 - Time: 7.864  - Loss: 26169.973  - GP loss: 6561.139  - NLL Loss: 19608.834  - Recon Loss: 237.594
+Error for Training: 0.02915257743320944
+Iter 194/200 - Time: 7.683  - Loss: 26072.698  - GP loss: 6561.446  - NLL Loss: 19511.252  - Recon Loss: 227.669
+Error for Training: 0.027934906488412462
+Iter 195/200 - Time: 8.140  - Loss: 26028.441  - GP loss: 6563.781  - NLL Loss: 19464.660  - Recon Loss: 224.646
+Error for Training: 0.027563921907810738
+Testing the model with a validation set
+Validation set - Loss: 3268.568  - GP loss: 831.507  - NLL loss: 2437.061  - Recon Loss: 1.158
+Validation set - GP prediction Error: 1.5485, Mean of Error 0.1548
+Validation Duration: 27.860284566879272
+Iter 196/200 - Time: 7.102  - Loss: 25999.978  - GP loss: 6566.862  - NLL Loss: 19433.116  - Recon Loss: 220.167
+Error for Training: 0.02701439517999285
+Iter 197/200 - Time: 7.386  - Loss: 25999.079  - GP loss: 6561.950  - NLL Loss: 19437.128  - Recon Loss: 217.718
+Error for Training: 0.02671385775787964
+Iter 198/200 - Time: 7.555  - Loss: 25978.540  - GP loss: 6551.083  - NLL Loss: 19427.457  - Recon Loss: 224.807
+Error for Training: 0.02758365622415979
+Iter 199/200 - Time: 7.571  - Loss: 25964.050  - GP loss: 6530.874  - NLL Loss: 19433.176  - Recon Loss: 226.442
+Error for Training: 0.027784288314501877
+Iter 200/200 - Time: 7.482  - Loss: 25934.112  - GP loss: 6507.681  - NLL Loss: 19426.431  - Recon Loss: 217.884
+Error for Training: 0.026734226401157034
+Testing the model with a validation set
+Validation set - Loss: 3245.730  - GP loss: 822.698  - NLL loss: 2423.032  - Recon Loss: 1.169
+Validation set - GP prediction Error: 1.5562, Mean of Error 0.1556
+Validation Duration: 26.481919050216675
+Best epoch is 200
+Best epoch imputation error is -1
+Imputation error is 0.0
+Duration of training: 2230.16 seconds
+Saving
+Length of test dataset:  102
+Error for whole test dataset. Even the ones in the training dataset.
+
+pos
+Imputation
+Error:nan
+Prediction-Mean
+Error:0.026970018190127617
+Prediction-Mode
+Error:0.02829785334606993
+
+real
+Imputation
+Error:0.0
+Prediction-Mean
+Error:0.0
+Prediction-Mode
+Error:0.0
+Observed Density: tensor(-2.5116)
+Missing Density: tensor(-1.6510)
+Observed Error(Mean): tensor(0.0842)
+Missing Error(Mean): tensor(0.0162)
+Observed Error(Mode): tensor(0.1373)
+Missing Error(Mode): tensor(0.0170)
+Mean Missing Error: tensor(nan)
+Mean Impt. pos missing error: tensor(nan)
+Prediction (Mean) pos missing error: tensor(0.0270)
+Prediction (Mode) pos missing error: tensor(0.0283)
+
+Mean Impt. real missing error: tensor(0.)
+Prediction (Mean) real missing error: tensor(0.)
+Prediction (Mode) real missing error: tensor(0.)
+
+
+=== SAVING IMPUTATION RESULTS ===
+Length of test dataset:  102
+Ground truth vs imputed data saved to: results\test_ground_truth_vs_imputed.csv
+
+=== IMPUTATION PERFORMANCE SUMMARY ===
+Missing data points: 102
+Mean absolute error (mean imputation): 1.7272
+Mean absolute error (mode imputation): 2.1500
+Observed data points: 918
+Mean absolute error (mean reconstruction): 3.3508
+Mean absolute error (mode reconstruction): 5.7972
+Length of test dataset:  102
+Ground truth vs imputed data saved to: results\validation_ground_truth_vs_imputed.csv
+
+=== IMPUTATION PERFORMANCE SUMMARY ===
+Observed data points: 1020
+Mean absolute error (mean reconstruction): 3.0989
+Mean absolute error (mode reconstruction): 5.2506

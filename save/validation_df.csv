@@ -1,0 +1,14 @@
+,0
+vae_error,0.012241281094797418
+GP_error,0.15681017351732104
+vae_mse,0.0
+miss_vae_error,0.0
+miss_GP_error,0.0
+net_loss,3282.811302117732
+GP_loss,830.9842748763391
+nll_loss,2451.827027241393
+recon_loss_sum,1.2486106716693366
+GP_recon_loss_sum,1.5681017351732105
+best_epoch,170.0
+best_epoch_missing_imp_error,-1.0
+missing_imp_error,0.0
