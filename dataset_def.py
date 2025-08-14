@@ -87,15 +87,21 @@ class CustomWeatherDataset(Dataset):
         param_mask = np.array([param_mask], dtype='uint8')
 
         label = self.label_source.iloc[idx, :]
-        # changed
-        # time_age,  disease_time,  subject,  gender,  disease,  location
-        label = np.array(label)
-        label = torch.Tensor(np.nan_to_num(np.array(label)))
+        label = pd.to_numeric(label, errors='coerce')
+        label = np.nan_to_num(label.to_numpy(dtype=np.float32))
+        label = torch.from_numpy(label)
 
         if self.transform:
             covariate = self.transform(covariate)
         else:
             covariate = torch.from_numpy(covariate)
 
-        sample = {'digit': covariate, 'label': label, 'idx': idx, 'mask': mask, 'param_mask': param_mask, 'true_mask': true_mask}
+        sample = {
+            'digit': covariate,
+            'label': label,
+            'idx': idx,
+            'mask': mask,
+            'param_mask': param_mask,
+            'true_mask': true_mask,
+        }
         return sample
