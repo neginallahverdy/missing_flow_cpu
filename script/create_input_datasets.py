@@ -33,8 +33,9 @@ if RAW.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
     df = pd.read_excel(RAW)
 else:
     df = pd.read_csv(RAW)
-fixed_cols = ["station_id", "date"]               # X
-Y_cols      = [c for c in df.columns if c not in fixed_cols]  # Y
+expected_cols = ["station_id", "date", "tmax", "tmin", "rrr24", "q"]
+fixed_cols = expected_cols[:2]
+
 
 # 2) تقسیم رندوم 80/10/10 -------------------------------------------------------
 train_idx, temp_idx = train_test_split(df.index, test_size=0.20,
@@ -57,7 +58,7 @@ def save_split(idx, split, add_missing=True, missing_pct=0.30, target_col=-1):
     true_mask.to_csv(OUT_DIR / f"true_mask_{split}.csv", index=False, header=False)
 
     mask = true_mask.copy()
-    col_name = Y_cols[target_col]  # rrr24
+    col_name = Y_cols[target_col]  # Q
 
     if split == "training" and add_missing:
         rng = np.random.default_rng(0)
@@ -70,7 +71,7 @@ def save_split(idx, split, add_missing=True, missing_pct=0.30, target_col=-1):
         Y.to_csv(OUT_DIR / f"meteo_{split}_Y.csv", index=False)
 
     if split == "test":
-        # کل ستون rrr24 در تست پنهان می‌شود
+        # کل ستون Q در تست پنهان می‌شود
         mask.loc[:, col_name] = 0
 
     mask.to_csv(OUT_DIR / f"mask_{split}.csv", index=False, header=False)

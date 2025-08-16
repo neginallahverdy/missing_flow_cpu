@@ -54,6 +54,8 @@ class CustomWeatherDataset(Dataset):
         self.label_source = pd.read_csv(os.path.join(root_dir, csv_file_label), header=0)
         if n_variables == 1296:
             self.label_source = self.label_source[self.label_source.columns.values[np.array([6, 4, 0, 5, 3, 7])]]
+        # تبدیل به دادهٔ عددی و جایگزینی مقادیر غیرقابل‌تبدیل با صفر
+        self.label_source = self.label_source.apply(pd.to_numeric, errors="coerce").fillna(0)
         self.root_dir = root_dir
         self.transform = transform
         self.cov_dim_ext = cov_dim_ext
