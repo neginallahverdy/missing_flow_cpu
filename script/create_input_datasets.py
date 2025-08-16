@@ -33,10 +33,9 @@ if RAW.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
     df = pd.read_excel(RAW)
 else:
     df = pd.read_csv(RAW)
-expected_cols = ["station_id", "date", "tmax", "tmin", "tm", "rrr24", "Q"]
-df = df[expected_cols]
-fixed_cols = expected_cols[:2]               # X
-Y_cols      = expected_cols[2:]              # Y
+expected_cols = ["station_id", "date", "tmax", "tmin", "rrr24", "q"]
+fixed_cols = expected_cols[:2]
+
 
 # 2) تقسیم رندوم 80/10/10 -------------------------------------------------------
 train_idx, temp_idx = train_test_split(df.index, test_size=0.20,
