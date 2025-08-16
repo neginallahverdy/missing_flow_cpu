@@ -54,6 +54,8 @@ class CustomWeatherDataset(Dataset):
         self.label_source = pd.read_csv(os.path.join(root_dir, csv_file_label), header=0)
         if n_variables == 1296:
             self.label_source = self.label_source[self.label_source.columns.values[np.array([6, 4, 0, 5, 3, 7])]]
+        # تبدیل به دادهٔ عددی و جایگزینی مقادیر غیرقابل‌تبدیل با صفر
+        self.label_source = self.label_source.apply(pd.to_numeric, errors="coerce").fillna(0)
         self.root_dir = root_dir
         self.transform = transform
         self.cov_dim_ext = cov_dim_ext
@@ -87,15 +89,21 @@ class CustomWeatherDataset(Dataset):
         param_mask = np.array([param_mask], dtype='uint8')
 
         label = self.label_source.iloc[idx, :]
-        # changed
-        # time_age,  disease_time,  subject,  gender,  disease,  location
-        label = np.array(label)
-        label = torch.Tensor(np.nan_to_num(np.array(label)))
+        label = pd.to_numeric(label, errors='coerce')
+        label = np.nan_to_num(label.to_numpy(dtype=np.float32))
+        label = torch.from_numpy(label)
 
         if self.transform:
             covariate = self.transform(covariate)
         else:
             covariate = torch.from_numpy(covariate)
 
-        sample = {'digit': covariate, 'label': label, 'idx': idx, 'mask': mask, 'param_mask': param_mask, 'true_mask': true_mask}
+        sample = {
+            'digit': covariate,
+            'label': label,
+            'idx': idx,
+            'mask': mask,
+            'param_mask': param_mask,
+            'true_mask': true_mask,
+        }
         return sample

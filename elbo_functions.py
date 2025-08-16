@@ -140,27 +140,31 @@ def minibatch_KLD_upper_bound(covar_module0, covar_module1, likelihood, latent_d
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device("cpu")
 
+    dtype = train_xt.dtype
+
     M = H.shape[-1]
     x_st = torch.reshape(train_xt, [P_batch, T, train_xt.shape[1]])
     stacked_x_st = torch.stack([x_st for i in range(latent_dim)], dim=1)
 
-    K0xz = covar_module0(train_xt.to(torch.float64), z).evaluate()
-    K0zz = covar_module0(z, z).evaluate()
-    K0_st = covar_module0(stacked_x_st, stacked_x_st).evaluate().transpose(0, 1)
-    B_st = (covar_module1(stacked_x_st, stacked_x_st).evaluate() + torch.eye(T, dtype=torch.double).to(
-        device) * likelihood.noise_covar.noise.unsqueeze(dim=2)).transpose(0, 1)
+    K0xz = covar_module0(train_xt.to(dtype), z.to(dtype)).evaluate()
+    K0zz = covar_module0(z.to(dtype), z.to(dtype)).evaluate()
+    K0_st = covar_module0(stacked_x_st.to(dtype), stacked_x_st.to(dtype)).evaluate().transpose(0, 1)
+    B_st = (covar_module1(stacked_x_st.to(dtype), stacked_x_st.to(dtype)).evaluate() +
+            torch.eye(T, dtype=dtype, device=device) *
+            likelihood.noise_covar.noise.unsqueeze(dim=2)).transpose(0, 1)
 
-    K0zz = K0zz + eps * torch.eye(M, dtype=torch.double).to(device)
+    K0zz = K0zz + eps * torch.eye(M, dtype=dtype, device=device)
     LK0zz = torch.linalg.cholesky(K0zz)
-    iK0zz = torch.cholesky_solve(torch.eye(M, dtype=torch.double).to(device), LK0zz)
+    iK0zz = torch.cholesky_solve(torch.eye(M, dtype=dtype, device=device), LK0zz)
     LB_st = torch.linalg.cholesky(B_st)
-    iB_st = torch.cholesky_solve(torch.eye(T, dtype=torch.double).to(device), LB_st).squeeze(dim=0)
+    iB_st = torch.cholesky_solve(torch.eye(T, dtype=dtype, device=device), LB_st).squeeze(dim=0)
 
     K0xz_st = torch.reshape(K0xz, [latent_dim, P_batch, T, M])
     iB_K0xz = torch.matmul(iB_st, K0xz_st)
-    K0zx_iB_K0xz = torch.matmul(torch.transpose(K0xz, 1, 2), torch.reshape(iB_K0xz, [latent_dim, P_batch * T, M]))
-    LH = torch.linalg.cholesky(H)
-    iH = torch.cholesky_solve(torch.eye(M, dtype=torch.double).to(device), LH)
+    K0zx_iB_K0xz = torch.matmul(torch.transpose(K0xz, 1, 2),
+                                torch.reshape(iB_K0xz, [latent_dim, P_batch * T, M]))
+    LH = torch.linalg.cholesky(H.to(dtype))
+    iH = torch.cholesky_solve(torch.eye(M, dtype=dtype, device=device), LH)
 
     # Compute the batch-wise partial sum
     _ = (torch.matmul(torch.matmul(K0xz, iK0zz), m).squeeze() - mu.T).reshape(latent_dim, P_batch, T, -1)
@@ -219,25 +223,27 @@ def minibatch_KLD_upper_bound_iter(covar_module0, covar_module1, likelihood, lat
 
     M = H.shape[-1]
 
-    K0xz = covar_module0(train_xt, z).evaluate()
-    K0zz = covar_module0(z, z).evaluate()
-    K0zz = K0zz + eps * torch.eye(M, dtype=torch.double).to(device)
+    dtype = train_xt.dtype
+
+    K0xz = covar_module0(train_xt.to(dtype), z.to(dtype)).evaluate()
+    K0zz = covar_module0(z.to(dtype), z.to(dtype)).evaluate()
+    K0zz = K0zz + eps * torch.eye(M, dtype=dtype, device=device)
     LK0zz = torch.linalg.cholesky(K0zz)
-    iK0zz = torch.cholesky_solve(torch.eye(M, dtype=torch.double).to(device), LK0zz)
-    LH = torch.linalg.cholesky(H)
-    iH = torch.cholesky_solve(torch.eye(M, dtype=torch.double).to(device), LH)
+    iK0zz = torch.cholesky_solve(torch.eye(M, dtype=dtype, device=device), LK0zz)
+    LH = torch.linalg.cholesky(H.to(dtype))
+    iH = torch.cholesky_solve(torch.eye(M, dtype=dtype, device=device), LH)
 
     A_part = (torch.matmul(torch.matmul(K0xz, iK0zz), m).squeeze(dim=2) - mu.T).unsqueeze(dim=2)
-    E_part = torch.matmul(torch.matmul(iK0zz, H), iK0zz)
+    E_part = torch.matmul(torch.matmul(iK0zz, H.to(dtype)), iK0zz)
 
-    A = torch.tensor([0.0], dtype=torch.double).to(device)
-    B = torch.tensor([0.0], dtype=torch.double).to(device)
-    C = torch.tensor([0.0], dtype=torch.double).to(device)
-    D = torch.tensor([0.0], dtype=torch.double).to(device)
-    E = torch.tensor([0.0], dtype=torch.double).to(device)
+    A = torch.tensor([0.0], dtype=dtype, device=device)
+    B = torch.tensor([0.0], dtype=dtype, device=device)
+    C = torch.tensor([0.0], dtype=dtype, device=device)
+    D = torch.tensor([0.0], dtype=dtype, device=device)
+    E = torch.tensor([0.0], dtype=dtype, device=device)
     if natural_gradient:
-        ng_P1 = torch.zeros(latent_dim, M, 1, dtype=torch.double).to(device)
-        ng_P2 = torch.zeros(latent_dim, M, M, dtype=torch.double).to(device)
+        ng_P1 = torch.zeros(latent_dim, M, 1, dtype=dtype, device=device)
+        ng_P2 = torch.zeros(latent_dim, M, M, dtype=dtype, device=device)
 
     subjects = torch.unique(train_xt[:, id_covariate]).tolist()
     for s in subjects:
@@ -245,11 +251,11 @@ def minibatch_KLD_upper_bound_iter(covar_module0, covar_module1, likelihood, lat
         tx = train_xt[indices]
         T = tx.shape[0]
         stacked_tx = torch.stack([tx for i in range(latent_dim)], dim=0)
-        K0_st = covar_module0(stacked_tx, stacked_tx).evaluate()
-        B_st = covar_module1(stacked_tx, stacked_tx).evaluate() + torch.eye(T, dtype=torch.double).to(
-            device) * likelihood.noise_covar.noise.unsqueeze(dim=2)
+        K0_st = covar_module0(stacked_tx.to(dtype), stacked_tx.to(dtype)).evaluate()
+        B_st = covar_module1(stacked_tx.to(dtype), stacked_tx.to(dtype)).evaluate() + \
+            torch.eye(T, dtype=dtype, device=device) * likelihood.noise_covar.noise.unsqueeze(dim=2)
         LB_st = torch.linalg.cholesky(B_st.to(torch.device("cpu"))).to(device)
-        iB_st = torch.cholesky_solve(torch.eye(T, dtype=torch.double).to(device), LB_st).squeeze(dim=0)
+        iB_st = torch.cholesky_solve(torch.eye(T, dtype=dtype, device=device), LB_st).squeeze(dim=0)
         K0xz_st = K0xz[:, indices]
         K0zx_iB_K0xz = torch.einsum('bik,bij,bjl->bkl', K0xz_st, iB_st, K0xz_st)
 
