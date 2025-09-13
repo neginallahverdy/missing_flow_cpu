@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description="Split dataset into train/validatio
 parser.add_argument(
     "-input",
     dest="input_path",
-    default=str(SCRIPT_DIR / "meteo_asadabad.csv"),
+    default=str(SCRIPT_DIR / "keramanshah_badrgerd_homil_input.csv"),
     help="Path to input dataset (CSV or Excel)"
 )
 args = parser.parse_args()
@@ -33,9 +33,27 @@ if RAW.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
     df = pd.read_excel(RAW)
 else:
     df = pd.read_csv(RAW)
+<<<<<<< HEAD
 expected_cols = ["station_id", "date", "tmax", "tmin", "rrr24", "q"]
 fixed_cols = expected_cols[:2]
 
+=======
+# Normalize column names: strip whitespace
+df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
+
+# Drop 'Unnamed' columns (pandas creates these when there are extra separators)
+unnamed_cols = [c for c in df.columns if isinstance(c, str) and c.startswith('Unnamed')]
+# Also drop any columns that are entirely NaN (often created by malformed CSVs)
+allnan_cols = [c for c in df.columns if df[c].isna().all()]
+
+cols_to_drop = sorted(set(unnamed_cols + allnan_cols))
+if cols_to_drop:
+    print(f"Dropping columns not present in source or entirely NaN: {cols_to_drop}")
+    df = df.drop(columns=cols_to_drop)
+
+fixed_cols = ["station_id", "date"]               # X
+Y_cols      = [c for c in df.columns if c not in fixed_cols]  # Y
+>>>>>>> 7a1a4f4 (Drop 'Unnamed' and all-NaN columns when reading input; log dropped columns)
 
 # 2) تقسیم رندوم 80/10/10 -------------------------------------------------------
 train_idx, temp_idx = train_test_split(df.index, test_size=0.20,
