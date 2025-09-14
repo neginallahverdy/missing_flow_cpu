@@ -55,9 +55,14 @@ if __name__ == "__main__":
 
     # --- 3. Load Trained VAE Model ---
     # The VAE parameters are now available as local variables
-    nnet_model = HLVAE([test_dataset.cov_dim_ext, hidden_layers, latent_dim, hidden_layers, y_dim], test_dataset.types_info,
-                       test_dataset.n_variables, vy_init=[vy_init_real, vy_init_pos], logvar_network=logvar_network, conv=conv_hivae).to(
-        device).to(torch.float64)
+    nnet_model = HLVAE(
+        [test_dataset.cov_dim_ext, hidden_layers, latent_dim, hidden_layers, y_dim],
+        test_dataset.types_info,
+        test_dataset.n_variables,
+        vy_init=[vy_init_real, vy_init_pos],
+        logvar_network=logvar_network,
+        conv=conv_hivae,
+    ).to(device).to(torch.float64)
     try:
         nnet_model.load_state_dict(torch.load(model_params, map_location=lambda storage, loc: storage))
         print('Loaded pre-trained values.')

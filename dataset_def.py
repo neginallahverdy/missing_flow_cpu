@@ -36,19 +36,19 @@ class CustomWeatherDataset(Dataset):
 
             return os.path.join(root, path) if root and path else path
 
-        csv_file_data = _join(root_dir, csv_file_data)
-        csv_file_label = _join(root_dir, csv_file_label)
-        mask_file = _join(root_dir, mask_file)
-        types_file = _join(root_dir, types_file)
-        true_miss_file = _join(root_dir, true_miss_file)
-        range_file = _join(root_dir, range_file)
+        csv_data_path = _join(root_dir, csv_file_data)
+        label_path = _join(root_dir, csv_file_label)
+        mask_path = _join(root_dir, mask_file)
+        types_path = _join(root_dir, types_file)
+        true_miss_path = _join(root_dir, true_miss_file)
+        range_path = _join(root_dir, range_file)
 
         train_data, types_info, miss_mask, true_miss_mask, n_samples, n_variables = \
-            rd.read_data(csv_file_data,
-                         mask_file,
-                         true_miss_file,
-                         types_file,
-                         range_file,
+            rd.read_data(csv_data_path,
+                         mask_path,
+                         true_miss_path,
+                         types_path,
+                         range_path,
                          logvar_network=logvar_network)
 
         self.types_info = types_info
@@ -68,9 +68,9 @@ class CustomWeatherDataset(Dataset):
         self.param_mask_source = pd.DataFrame(types_info['param_miss_mask'])
         self.types_dict = types_info['types_dict']
         self.true_miss_mask = pd.DataFrame(true_miss_mask)
-        self.label_source = pd.read_csv(csv_file_label, header=0)
+        self.label_source = pd.read_csv(label_path, header=0)
         # Store full arrays for later inverse scaling / evaluation
-        self.Y_df = pd.read_csv(csv_file_data)
+        self.Y_df = pd.read_csv(csv_data_path)
         self.Y = torch.from_numpy(train_data).to(torch.float64)
         self.mask = torch.from_numpy(miss_mask)
         if n_variables == 1296:
