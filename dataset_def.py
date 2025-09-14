@@ -1,8 +1,3 @@
-"""custom_weather_dataset.py – یک کلاس دیتاست مستقل برای HL‑VAE
-
-این کد را می‌توانید مستقیماً در همان فایل `dataset_def.py` اضافه کنید (یا در فایل جداگانه‌ای ایمپورت کنید).
-هیچ وابستگی به توابع یا کلاس‌های دیگر مخزن ندارد؛ فقط به `pandas`, `numpy`, `torch` نیاز دارد.
-"""
 from __future__ import annotations
 
 import os
@@ -17,21 +12,31 @@ import HL_VAE.read_functions as rd
 
 class CustomWeatherDataset(Dataset):
     """
-    Dataset definition for the Health MNIST dataset when using HLVAE.
+    Dataset definition for custom weather dataset when using HLVAE.
 
-    Data formatted as dataset_length x 1296.
+    Data formatted as dataset_length x n_variables.
     """
 
     def __init__(self, csv_file_data, csv_file_label, mask_file, types_file, true_miss_file,
                  root_dir, range_file=None, transform=None, logvar_network=False):
 
-        if true_miss_file is not None:
-            true_miss_file = os.path.join(root_dir, true_miss_file)
+        def _join(root: Optional[str], path: Optional[str]) -> Optional[str]:
+            """Safely join ``root`` and ``path`` even if either is ``None``."""
+            return os.path.join(root, path) if root and path else path
+
+        csv_data_path = _join(root_dir, csv_file_data)
+        label_path = _join(root_dir, csv_file_label)
+        mask_path = _join(root_dir, mask_file)
+        types_path = _join(root_dir, types_file)
+        true_miss_path = _join(root_dir, true_miss_file)
+        range_path = _join(root_dir, range_file)
+
         train_data, types_info, miss_mask, true_miss_mask, n_samples, n_variables = \
-            rd.read_data(os.path.join(root_dir, csv_file_data),
-                                        os.path.join(root_dir, mask_file),
-                                        true_miss_file, os.path.join(root_dir, types_file),
-                         os.path.join(root_dir, range_file) if range_file is not None else None,
+            rd.read_data(csv_data_path,
+                         mask_path,
+                         true_miss_path,
+                         types_path,
+                         range_path,
                          logvar_network=logvar_network)
 
         self.types_info = types_info
@@ -43,23 +48,29 @@ class CustomWeatherDataset(Dataset):
             if t['type'] == 'beta':
                 cov_dim_ext += t['dim']
             else:
-                cov_dim_ext += t['dim']*t['nclass']
-
+                cov_dim_ext += t['dim'] * t['nclass']
 
         self.data_source = pd.DataFrame(train_data)
         self.mask_source = pd.DataFrame(miss_mask)
         self.param_mask_source = pd.DataFrame(types_info['param_miss_mask'])
         self.types_dict = types_info['types_dict']
         self.true_miss_mask = pd.DataFrame(true_miss_mask)
-        self.label_source = pd.read_csv(os.path.join(root_dir, csv_file_label), header=0)
-        # Store full arrays for later inverse scaling / evaluation
-        self.Y_df = pd.read_csv(os.path.join(root_dir, csv_file_data))
+
+        # برچسب‌ها و داده‌ها
+        self.label_source = pd.read_csv(label_path, header=0)
+        self.Y_df = pd.read_csv(csv_data_path)
+
         self.Y = torch.from_numpy(train_data).to(torch.float64)
         self.mask = torch.from_numpy(miss_mask)
+
         if n_variables == 1296:
-            self.label_source = self.label_source[self.label_source.columns.values[np.array([6, 4, 0, 5, 3, 7])]]
+            self.label_source = self.label_source[self.label_source.columns.values[
+                np.array([6, 4, 0, 5, 3, 7])
+            ]]
+
         # تبدیل به دادهٔ عددی و جایگزینی مقادیر غیرقابل‌تبدیل با صفر
         self.label_source = self.label_source.apply(pd.to_numeric, errors="coerce").fillna(0)
+
         self.root_dir = root_dir
         self.transform = transform
         self.cov_dim_ext = cov_dim_ext
@@ -68,7 +79,6 @@ class CustomWeatherDataset(Dataset):
 
     def __len__(self):
         return len(self.data_source)
-
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -82,6 +92,7 @@ class CustomWeatherDataset(Dataset):
     def get_item(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
+
         digit = self.data_source.iloc[idx, :].to_numpy()
         covariate = digit.astype(np.float64)
 
@@ -90,7 +101,7 @@ class CustomWeatherDataset(Dataset):
         param_mask = self.param_mask_source.iloc[idx, :].to_numpy(dtype="uint8")
 
         label = self.label_source.iloc[idx, :]
-        label = pd.to_numeric(label, errors='coerce')
+        label = pd.to_numeric(label, errors="coerce")
         label = np.nan_to_num(label.to_numpy(dtype=np.float32))
         label = torch.from_numpy(label)
 
@@ -100,11 +111,11 @@ class CustomWeatherDataset(Dataset):
             covariate = torch.from_numpy(covariate)
 
         sample = {
-            'digit': covariate,
-            'label': label,
-            'idx': idx,
-            'mask': mask,
-            'param_mask': param_mask,
-            'true_mask': true_mask,
+            "digit": covariate,
+            "label": label,
+            "idx": idx,
+            "mask": mask,
+            "param_mask": param_mask,
+            "true_mask": true_mask,
         }
         return sample
