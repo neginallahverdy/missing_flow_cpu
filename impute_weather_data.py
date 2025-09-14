@@ -23,7 +23,10 @@ if __name__ == "__main__":
     hidden_layers = ast.literal_eval(hidden_layers)
 
     # Reconstruct paths using the base 'save_path' for consistency
-    results_path = os.path.join('./results')
+    # ``results_path`` may be omitted in the configuration, in which case it
+    # defaults to ``save_path`` directly.  Avoid ``TypeError`` from
+    # ``os.path.join`` when the argument is ``None``.
+    results_path = os.path.join(save_path, results_path) if results_path else save_path
     gp_model_folder = os.path.join(save_path, gp_model_folder)
     
     # Determine the correct model file to use based on the early_stopping flag
