@@ -42,7 +42,11 @@ if __name__ == "__main__":
     if not folder_exists:
         os.makedirs(save_path)
 
-    results_path = os.path.join(save_path , results_path)
+    # ``results_path`` is optional in many configs.  When it is omitted the
+    # argument parser returns ``None`` which causes ``os.path.join`` to raise a
+    # ``TypeError``.  Default to saving results directly inside ``save_path`` if
+    # no subfolder is specified.
+    results_path = os.path.join(save_path, results_path) if results_path else save_path
     gp_model_folder = os.path.join(save_path, gp_model_folder)
     model_params = os.path.join(save_path, model_params)
     folder_exists = os.path.isdir(results_path)

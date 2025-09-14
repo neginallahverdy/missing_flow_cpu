@@ -25,13 +25,30 @@ class CustomWeatherDataset(Dataset):
     def __init__(self, csv_file_data, csv_file_label, mask_file, types_file, true_miss_file,
                  root_dir, range_file=None, transform=None, logvar_network=False):
 
-        if true_miss_file is not None:
-            true_miss_file = os.path.join(root_dir, true_miss_file)
+        def _join(root: Optional[str], path: Optional[str]) -> Optional[str]:
+            """Safely join ``root`` and ``path`` even if either is ``None``.
+
+            When configuration files omit a ``root_dir`` or individual file names
+            are already absolute paths, ``os.path.join`` would normally raise a
+            ``TypeError``.  This helper simply returns the ``path`` unchanged if
+            the ``root`` or ``path`` is ``None``.
+            """
+
+            return os.path.join(root, path) if root and path else path
+
+        csv_file_data = _join(root_dir, csv_file_data)
+        csv_file_label = _join(root_dir, csv_file_label)
+        mask_file = _join(root_dir, mask_file)
+        types_file = _join(root_dir, types_file)
+        true_miss_file = _join(root_dir, true_miss_file)
+        range_file = _join(root_dir, range_file)
+
         train_data, types_info, miss_mask, true_miss_mask, n_samples, n_variables = \
-            rd.read_data(os.path.join(root_dir, csv_file_data),
-                                        os.path.join(root_dir, mask_file),
-                                        true_miss_file, os.path.join(root_dir, types_file),
-                         os.path.join(root_dir, range_file) if range_file is not None else None,
+            rd.read_data(csv_file_data,
+                         mask_file,
+                         true_miss_file,
+                         types_file,
+                         range_file,
                          logvar_network=logvar_network)
 
         self.types_info = types_info
@@ -51,7 +68,11 @@ class CustomWeatherDataset(Dataset):
         self.param_mask_source = pd.DataFrame(types_info['param_miss_mask'])
         self.types_dict = types_info['types_dict']
         self.true_miss_mask = pd.DataFrame(true_miss_mask)
-        self.label_source = pd.read_csv(os.path.join(root_dir, csv_file_label), header=0)
+        self.label_source = pd.read_csv(csv_file_label, header=0)
+        # Store full arrays for later inverse scaling / evaluation
+        self.Y_df = pd.read_csv(csv_file_data)
+        self.Y = torch.from_numpy(train_data).to(torch.float64)
+        self.mask = torch.from_numpy(miss_mask)
         if n_variables == 1296:
             self.label_source = self.label_source[self.label_source.columns.values[np.array([6, 4, 0, 5, 3, 7])]]
         # تبدیل به دادهٔ عددی و جایگزینی مقادیر غیرقابل‌تبدیل با صفر
@@ -78,15 +99,12 @@ class CustomWeatherDataset(Dataset):
     def get_item(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        digit = self.data_source.iloc[idx, :]
-        covariate = np.array([digit])
+        digit = self.data_source.iloc[idx, :].to_numpy()
+        covariate = digit.astype(np.float64)
 
-        mask = self.mask_source.iloc[idx, :]
-        mask = np.array([mask], dtype='uint8')
-        true_mask = self.true_miss_mask.iloc[idx, :]
-        true_mask = np.array([true_mask], dtype='uint8')
-        param_mask = self.param_mask_source.iloc[idx, :]
-        param_mask = np.array([param_mask], dtype='uint8')
+        mask = self.mask_source.iloc[idx, :].to_numpy(dtype="uint8")
+        true_mask = self.true_miss_mask.iloc[idx, :].to_numpy(dtype="uint8")
+        param_mask = self.param_mask_source.iloc[idx, :].to_numpy(dtype="uint8")
 
         label = self.label_source.iloc[idx, :]
         label = pd.to_numeric(label, errors='coerce')
