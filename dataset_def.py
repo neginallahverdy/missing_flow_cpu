@@ -52,6 +52,10 @@ class CustomWeatherDataset(Dataset):
         self.types_dict = types_info['types_dict']
         self.true_miss_mask = pd.DataFrame(true_miss_mask)
         self.label_source = pd.read_csv(os.path.join(root_dir, csv_file_label), header=0)
+        # Store full arrays for later inverse scaling / evaluation
+        self.Y_df = pd.read_csv(os.path.join(root_dir, csv_file_data))
+        self.Y = torch.from_numpy(train_data).to(torch.float64)
+        self.mask = torch.from_numpy(miss_mask)
         if n_variables == 1296:
             self.label_source = self.label_source[self.label_source.columns.values[np.array([6, 4, 0, 5, 3, 7])]]
         # تبدیل به دادهٔ عددی و جایگزینی مقادیر غیرقابل‌تبدیل با صفر
@@ -78,15 +82,12 @@ class CustomWeatherDataset(Dataset):
     def get_item(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        digit = self.data_source.iloc[idx, :]
-        covariate = np.array([digit])
+        digit = self.data_source.iloc[idx, :].to_numpy()
+        covariate = digit.astype(np.float64)
 
-        mask = self.mask_source.iloc[idx, :]
-        mask = np.array([mask], dtype='uint8')
-        true_mask = self.true_miss_mask.iloc[idx, :]
-        true_mask = np.array([true_mask], dtype='uint8')
-        param_mask = self.param_mask_source.iloc[idx, :]
-        param_mask = np.array([param_mask], dtype='uint8')
+        mask = self.mask_source.iloc[idx, :].to_numpy(dtype="uint8")
+        true_mask = self.true_miss_mask.iloc[idx, :].to_numpy(dtype="uint8")
+        param_mask = self.param_mask_source.iloc[idx, :].to_numpy(dtype="uint8")
 
         label = self.label_source.iloc[idx, :]
         label = pd.to_numeric(label, errors='coerce')

@@ -33,11 +33,7 @@ if RAW.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
     df = pd.read_excel(RAW)
 else:
     df = pd.read_csv(RAW)
-<<<<<<< HEAD
-expected_cols = ["station_id", "date", "tmax", "tmin", "rrr24", "q"]
-fixed_cols = expected_cols[:2]
 
-=======
 # Normalize column names: strip whitespace
 df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
 
@@ -53,7 +49,16 @@ if cols_to_drop:
 
 fixed_cols = ["station_id", "date"]               # X
 Y_cols      = [c for c in df.columns if c not in fixed_cols]  # Y
->>>>>>> 7a1a4f4 (Drop 'Unnamed' and all-NaN columns when reading input; log dropped columns)
+
+# 1.a) Min-max normalise Y columns in-place and store ranges
+ranges = {}
+for col in Y_cols:
+    col_data = pd.to_numeric(df[col], errors="coerce")
+    min_val = col_data.min()
+    max_val = col_data.max()
+    ranges[col] = {"min": float(min_val), "max": float(max_val)}
+    denom = max_val - min_val if max_val != min_val else 1.0
+    df[col] = (col_data - min_val) / denom
 
 # 2) تقسیم رندوم 80/10/10 -------------------------------------------------------
 train_idx, temp_idx = train_test_split(df.index, test_size=0.20,
@@ -116,33 +121,16 @@ types_df = pd.DataFrame({
 types_df.to_csv(OUT_DIR / "data_types.csv", index=False)
 # 6) CREATE RANGE FILE ----------------------------------------------------------
 def create_range_file():
-    """Create a CSV file with min/max ranges for each Y variable."""
+    """Save min/max ranges (before normalisation) for later inverse scaling."""
     print("Creating data_ranges.csv...")
-    
-    # Calculate min and max for each Y column across the entire dataset
-    ranges_data = []
-    for col in Y_cols:
-        # Skip NaN values when calculating min/max
-        col_data = df[col].dropna()
-        if len(col_data) > 0:
-            min_val = col_data.min()
-            max_val = col_data.max()
-        else:
-            # Fallback if all values are NaN
-            min_val = 0.0
-            max_val = 1.0
-        
-        ranges_data.append({
-            'variable': col,
-            'min': min_val,
-            'max': max_val
-        })
-    
-    # Create DataFrame and save
-    ranges_df = pd.DataFrame(ranges_data)
+
+    ranges_df = pd.DataFrame([
+        {"variable": col, "min": info["min"], "max": info["max"]}
+        for col, info in ranges.items()
+    ])
     range_file_path = OUT_DIR / "data_ranges.csv"
     ranges_df.to_csv(range_file_path, index=False)
-    
+
     print(f"✅ Range file created: {range_file_path}")
     print("Ranges:")
     for _, row in ranges_df.iterrows():

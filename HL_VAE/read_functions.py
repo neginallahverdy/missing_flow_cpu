@@ -54,6 +54,12 @@ def read_data(data_file, miss_file, true_miss_file, types_file, range_file, logv
                 true_miss_mask[missing_positions[:, 0] - 1, missing_positions[:, 1] - 1] = 0   # Indexes in the csv start at 1
         else:
             true_miss_mask = missing_positions  ## Missing file is already in the matrix form
+            if true_miss_mask.shape == (data.shape[1], data.shape[0]):
+                true_miss_mask = true_miss_mask.T
+            elif true_miss_mask.shape != (data.shape[0], data.shape[1]):
+                raise ValueError(
+                    f"True mask shape {true_miss_mask.shape} incompatible with data shape {(data.shape[0], data.shape[1])}"
+                )
 
     # Construct the data matrices
     n_variables = data.shape[1]
@@ -136,6 +142,12 @@ def read_data(data_file, miss_file, true_miss_file, types_file, range_file, logv
                 miss_mask[missing_positions[:, 0] - 1, missing_positions[:, 1] - 1] = 0   # Indexes in the csv start at 1
         else:
             miss_mask = missing_positions  ## Missing file is already in the matrix form
+            if miss_mask.shape == (n_variables, np.shape(data)[0]):
+                miss_mask = miss_mask.T
+            elif miss_mask.shape != (np.shape(data)[0], n_variables):
+                raise ValueError(
+                    f"Mask shape {miss_mask.shape} incompatible with data shape {(np.shape(data)[0], n_variables)}"
+                )
     miss_mask = miss_mask * true_miss_mask
 
 
