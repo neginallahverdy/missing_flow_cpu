@@ -52,8 +52,8 @@ if __name__ == "__main__":
 
     # --- 3. Load Trained VAE Model ---
     # The VAE parameters are now available as local variables
-    nnet_model = HLVAE([dataset.cov_dim_ext, hidden_layers, latent_dim, hidden_layers, y_dim], dataset.types_info,
-                       dataset.n_variables, vy_init=[vy_init_real, vy_init_pos], logvar_network=logvar_network, conv=conv_hivae).to(
+    nnet_model = HLVAE([test_dataset.cov_dim_ext, hidden_layers, latent_dim, hidden_layers, y_dim], test_dataset.types_info,
+                       test_dataset.n_variables, vy_init=[vy_init_real, vy_init_pos], logvar_network=logvar_network, conv=conv_hivae).to(
         device).to(torch.float64)
     try:
         nnet_model.load_state_dict(torch.load(model_params, map_location=lambda storage, loc: storage))
@@ -64,11 +64,11 @@ if __name__ == "__main__":
     # --- 4. Perform Imputation ---
     with torch.no_grad():
         batch = next(iter(dataloader))
-        batch_Y = batch["Y"].to(device).double()
+        batch_Y = batch["digit"].to(device).double()
         mask_Y = batch["mask"].to(device)
-        batch_X = batch["X"].to(device).double()
+        param_mask = batch["param_mask"].to(device)
 
-        p_samples, _, _, _, _, _, _, _ = vae(data=batch_Y, mask=mask_Y, param_mask=mask_Y, types_info=test_dataset.types_info, X_list=[batch_X])
+        p_samples, _, _, _, _, _, _, _ = nnet_model(data=batch_Y, mask=mask_Y, param_mask=param_mask, types_info=test_dataset.types_info)
         
         reconstructed_data = p_samples['x']
         if isinstance(reconstructed_data, list):
@@ -84,6 +84,18 @@ if __name__ == "__main__":
         imputed_np[:, pos_cols] = np.exp(imputed_np[:, pos_cols]) - EPS
         print(f"Applied inverse transformation to {len(pos_cols)} positive columns.")
 
+    # Inverse min-max scaling using training ranges
+    ranges_df = pd.read_csv(os.path.join(data_source_path, csv_range_file))
+    ground_truth_np = test_dataset.Y.cpu().numpy()
+    for col_idx, col in enumerate(test_dataset.Y_df.columns):
+        min_val = ranges_df.loc[ranges_df['variable'] == col, 'min'].values[0]
+        max_val = ranges_df.loc[ranges_df['variable'] == col, 'max'].values[0]
+        scale = max_val - min_val
+        imputed_np[:, col_idx] = imputed_np[:, col_idx] * scale + min_val
+        ground_truth_np[:, col_idx] = ground_truth_np[:, col_idx] * scale + min_val
+        if col.lower() in ['rrr24', 'q']:
+            imputed_np[:, col_idx] = np.clip(imputed_np[:, col_idx], 0, max_val)
+
     imputed_df = pd.DataFrame(imputed_np, columns=test_dataset.Y_df.columns)
     output_file = os.path.join(results_path, "imputed_weather_test_data.csv")
     imputed_df.to_csv(output_file, index=False)
@@ -95,7 +107,6 @@ if __name__ == "__main__":
     print("\nCreating a comparison file for missing values...")
 
     miss_mask = test_dataset.mask.cpu().numpy() == 0
-    ground_truth_np = test_dataset.Y.cpu().numpy()
     column_names = test_dataset.Y_df.columns
 
     comparison_data = []
